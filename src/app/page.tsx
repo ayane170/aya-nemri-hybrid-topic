@@ -1,65 +1,200 @@
-import Image from "next/image";
+// import Image from "next/image";
 
-export default function Home() {
+// export default function Home() {
+//   return (
+//     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+//       <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
+//         vgvgrbgbg
+//       </main>
+//     </div>
+//   );
+// }
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+// Zod schema = règles de validation
+const crisisAlertSchema = z.object({
+  title: z
+    .string()
+    .min(3, "Titel moet minstens 3 karakters bevatten")
+    .max(60, "Titel mag 60 karakters bevatten"),
+  description: z
+    .string()
+    .min(10, "Beschrijving moet minstens 10 karakters bevatten")
+    .max(500, "Beschrijving mag 500 karakters bevatten"),
+  urgency: z.enum(["LOW", "MEDIUM", "HIGH"], {
+    errorMap: () => ({ message: "Kies een urgentie" }),
+  }),
+  email: z.string().email("Voer een geldig e-mailadres in"),
+});
+
+// TypeScript type depuis le schema
+type CrisisAlertForm = z.infer<typeof crisisAlertSchema>;
+
+export default function HomePage() {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors, isSubmitting, isSubmitSuccessful },
+  } = useForm<CrisisAlertForm>({
+    resolver: zodResolver(crisisAlertSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      urgency: "MEDIUM",
+      email: "",
+    },
+    mode: "onBlur", // valide quand tu quittes le champ
+  });
+
+  const router = useRouter();
+
+  const selectedUrgency = watch("urgency");
+
+  const onSubmit = async (data: CrisisAlertForm) => {
+    const params = new URLSearchParams({
+      title: data.title,
+      description: data.description,
+      urgency: data.urgency,
+      email: data.email,
+    });
+    setTimeout(() => {
+      router.push(`/result?${params.toString()}`);
+    }, 1000);
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+    <main className="min-h-screen p-6 text-slate-900">
+      <div className="mx-auto max-w-xl rounded-2xl bg-white p-6 shadow text-slate-900">
+        <h1 className="text-2xl font-semibold">Crisis Alert Form</h1>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-5">
+          {/* TITLE */}
+          <div>
+            <label className="mb-1 block text-sm font-medium">Titel</label>
+            <input
+              type="text"
+              className={`w-full rounded-xl border p-3 outline-none text-slate-900 placeholder:text-slate-400 ${
+                errors.title ? "border-red-500" : "border-slate-300"
+              }`}
+              placeholder="bv. Wateroverlast in Antwerpen"
+              {...register("title")}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            {errors.title && (
+              <p className="mt-1 text-sm text-red-600">
+                {errors.title.message}
+              </p>
+            )}
+          </div>
+
+          {/* DESCRIPTION */}
+          <div>
+            <label className="mb-1 block text-sm font-medium">
+              Beschrijving
+            </label>
+            <textarea
+              className={`w-full rounded-xl border p-3 outline-none ${
+                errors.description ? "border-red-500" : "border-slate-300"
+              }`}
+              rows={4}
+              placeholder="Beschrijf de situatie en wat burgers moeten doen..."
+              {...register("description")}
+            />
+            {errors.description && (
+              <p className="mt-1 text-sm text-red-600">
+                {errors.description.message}
+              </p>
+            )}
+          </div>
+
+          {/* URGENCY */}
+          <div>
+            <label className="mb-1 block text-sm font-medium">Urgentie</label>
+            <select
+              className={`w-full rounded-xl border p-3 outline-none ${
+                errors.urgency ? "border-red-500" : "border-slate-300"
+              }`}
+              {...register("urgency")}
+            >
+              <option value="LOW">Laag 🟢</option>
+              <option value="MEDIUM">Middel 🟠</option>
+              <option value="HIGH">Hoog 🔴 </option>
+            </select>
+            {errors.urgency && (
+              <p className="mt-1 text-sm text-red-600">
+                {errors.urgency.message}
+              </p>
+            )}
+          </div>
+
+          {/*  */}
+          <div className="mt-2">
+            {selectedUrgency === "HIGH" && (
+              <span className="rounded-full bg-red-600 px-3 py-1 text-xs text-white">
+                Hoge urgentie
+              </span>
+            )}
+            {selectedUrgency === "MEDIUM" && (
+              <span className="rounded-full bg-orange-500 px-3 py-1 text-xs text-white">
+                Middel urgentie
+              </span>
+            )}
+            {selectedUrgency === "LOW" && (
+              <span className="rounded-full bg-green-600 px-3 py-1 text-xs text-white">
+                Lage urgentie
+              </span>
+            )}
+          </div>
+
+          {/* EMAIL */}
+          <div>
+            <label className="mb-1 block text-sm font-medium">
+              Contact e-mail
+            </label>
+            <input
+              type="email"
+              className={`w-full rounded-xl border p-3 outline-none text-slate-900 placeholder:text-slate-400 ${
+                errors.email ? "border-red-500" : "border-slate-300"
+              }`}
+              placeholder="bv. info@civielshield.be"
+              {...register("email")}
+            />
+            {errors.email && (
+              <p className="mt-1 text-sm text-red-600">
+                {errors.email.message}
+              </p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full rounded-xl bg-slate-900 px-4 py-3 text-white disabled:opacity-60"
           >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+            {isSubmitting ? "Verzenden..." : "Verzenden"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => router.push("/result")}
+            className="w-full rounded-xl bg-slate-900 px-4 py-3 text-white disabled:opacity-60"
+          >
+            Bekijk alle alerts
+          </button>
+
+          {isSubmitSuccessful && (
+            <p className="text-sm text-green-700">
+              ✅ Formulier verzonden.Je wordt doorgestuurd....
+            </p>
+          )}
+        </form>
+      </div>
+    </main>
   );
 }

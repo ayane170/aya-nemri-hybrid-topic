@@ -26,13 +26,10 @@ const crisisAlertSchema = z.object({
     .string()
     .min(10, "Beschrijving moet minstens 10 karakters bevatten")
     .max(500, "Beschrijving mag 500 karakters bevatten"),
-  urgency: z
-    .string()
-    .min(1, "Kies een urgentie")
-    .refine((v) => ["LOW", "MEDIUM", "HIGH"].includes(v), {
-      message: "Kies een urgentie",
-    })
-    .transform((v) => v as "LOW" | "MEDIUM" | "HIGH"),
+  urgency: z.enum(["LOW", "MEDIUM", "HIGH"], {
+    required_error: "Kies een urgentie",
+    invalid_type_error: "Kies een urgentie",
+  }),
   email: z.string().email("Voer een geldig e-mailadres in"),
 });
 
